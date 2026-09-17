@@ -1,0 +1,144 @@
+<html>
+  <head>
+    <title>Game Info - LDV Studios</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+    <script src="JS/header.js" type="module"></script>
+    <style>
+      #game-hero > * {
+        object-fit: cover;
+      }
+      #game-thumbs .thumb {
+        position: relative;
+        width: 96px;
+        height: 64px;
+        cursor: pointer;
+        opacity: 0.65;
+        border: 2px solid transparent;
+        border-radius: 0.375rem;
+        overflow: hidden;
+        transition: opacity 0.15s ease, border-color 0.15s ease;
+      }
+      #game-thumbs .thumb:hover {
+        opacity: 1;
+      }
+      #game-thumbs .thumb.active {
+        opacity: 1;
+        border-color: var(--bs-primary);
+      }
+      #game-thumbs .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      #game-thumbs .thumb .play-icon {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+        font-size: 1.1rem;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main-header></main-header>
+
+    <div id="game-info-root" class="container my-5">
+      <div id="game-hero" class="ratio ratio-16x9 rounded-3 overflow-hidden bg-dark mb-3">
+        <img id="game-image" src="" alt="" class="w-100 h-100" />
+        <video id="game-video" class="w-100 h-100" controls hidden></video>
+      </div>
+      <div id="game-thumbs" class="d-flex justify-content-center gap-2 flex-wrap mb-5"></div>
+
+      <div class="mx-auto" style="max-width: 720px">
+        <h1 id="game-title" class="text-body-emphasis"></h1>
+        <p id="game-tagline" class="fs-5 text-muted"></p>
+        <p id="game-description"></p>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+      crossorigin="anonymous"
+    ></script>
+    <script type="module">
+      import { games } from './JS/games.js';
+
+      const slug = new URLSearchParams(window.location.search).get('game');
+      const game = games[slug];
+      const root = document.getElementById('game-info-root');
+
+      if (!game) {
+        root.innerHTML =
+          '<p class="text-center py-5">Game not found. <a href="index.html">Back to home</a></p>';
+      } else {
+        document.title = `${game.title} - LDV Studios`;
+        document.getElementById('game-title').textContent = game.title;
+        document.getElementById('game-tagline').textContent = game.tagline;
+        document.getElementById('game-description').textContent = game.description;
+
+        const mainImage = document.getElementById('game-image');
+        const mainVideo = document.getElementById('game-video');
+        const thumbStrip = document.getElementById('game-thumbs');
+        const media = game.media?.length ? game.media : [];
+
+        function showMedia(item, thumbEl) {
+          if (item.type === 'video') {
+            mainVideo.src = item.src;
+            mainVideo.poster = item.poster ?? '';
+            mainVideo.hidden = false;
+            mainImage.hidden = true;
+            mainImage.src = '';
+          } else {
+            mainVideo.pause();
+            mainVideo.removeAttribute('src');
+            mainVideo.hidden = true;
+            mainImage.src = item.src;
+            mainImage.alt = game.title;
+            mainImage.hidden = false;
+          }
+          thumbStrip.querySelectorAll('.thumb').forEach((el) => el.classList.remove('active'));
+          thumbEl?.classList.add('active');
+        }
+
+        media.forEach((item) => {
+          const thumb = document.createElement('div');
+          thumb.className = 'thumb';
+
+          const thumbImg = document.createElement('img');
+          thumbImg.src = item.type === 'video' ? item.poster ?? item.src : item.src;
+          thumbImg.alt = `${game.title} ${item.type}`;
+          thumb.appendChild(thumbImg);
+
+          if (item.type === 'video') {
+            const playIcon = document.createElement('span');
+            playIcon.className = 'play-icon';
+            playIcon.textContent = '▶';
+            thumb.appendChild(playIcon);
+          }
+
+          thumb.addEventListener('click', () => showMedia(item, thumb));
+          thumbStrip.appendChild(thumb);
+        });
+
+        thumbStrip.hidden = media.length < 2;
+        if (media.length) {
+          showMedia(media[0], thumbStrip.firstElementChild);
+        } else {
+          document.getElementById('game-hero').hidden = true;
+        }
+      }
+    </script>
+    <main-footer></main-footer>
+  </body>
+</html>
